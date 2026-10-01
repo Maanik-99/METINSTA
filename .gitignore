@@ -1,0 +1,79 @@
+# ==============================================================================
+# Git Ignore - METINSTA
+# ==============================================================================
+
+# Private Configurations & Secrets
+config.json
+credentials.csv
+service_account.json
+
+# Telegram Session Files
+*.session
+*.session-journal
+taskly_*.session*
+
+# Large Assets / Image Verification Photos
+images/
+images/*
+
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+
+# C extensions
+*.obj
+*.o
+*.lib
+
+# Distribution / packaging
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Virtual Environments
+venv/
+.venv/
+env/
+ENV/
+env.bak/
+venv.bak/
+
+# Environment Variables & Local Settings
+.env
+.env.*
+!.env.example
+
+# Logs and databases
+*.log
+*.sqlite
+*.sqlite3
+*.db
+
+# Operating System Files
+.DS_Store
+Thumbs.db
+desktop.ini
+$RECYCLE.BIN/
+
+# IDE / Editor Files
+.idea/
+.vscode/
+*.swp
+*.swo
+*~

@@ -1,0 +1,60 @@
+{
+    "num_workers": 1,
+    "task_mode": "cookies",
+    "browser_channel": "chrome",
+    "headless": true,
+    "viewport_width": 500,
+    "viewport_height": 700,
+    "email_services": {
+        "ninja": false,
+        "mail_td": false,
+        "mail_cx": true
+    },
+    "telegram": {
+        "target_bot": [
+            "PayGoeasy_bot",
+            "tasklyBux_bot"
+        ],
+        "auto_repeat_tasks": true,
+        "delay_between_steps": 2,
+        "accounts": [
+            {
+                "phone": "+1234567890",
+                "api_id": 12345678,
+                "api_hash": "your_api_hash_here",
+                "target_bot": [
+                    "tasklyBux_bot"
+                ],
+                "session_name": "taskly_session_example"
+            }
+        ]
+    },
+    "password_config": {
+        "prefix": "YourPrefix@123",
+        "random_chars_length": 0,
+        "include_today_date": false
+    },
+    "google_sheet": {
+        "enabled": true,
+        "service_account_file": "service_account.json",
+        "spreadsheet_id": "your_spreadsheet_id_here",
+        "spreadsheet_url": "https://docs.google.com/spreadsheets/d/your_spreadsheet_id_here",
+        "google_sheet_webhook_url": "https://script.google.com/macros/s/your_webhook_id/exec",
+        "input_sheet_name": "Sheet1",
+        "done_sheet_name": "Sheet2"
+    },
+    "captcha": {
+        "provider": "2captcha",
+        "api_key": "your_2captcha_api_key_here",
+        "site_key": "6LdktRgnAAAAAFQ6icovYI2-masYLFjEFyzQzpix",
+        "timeout": 120
+    },
+    "emulators": {
+        "ldplayer": true,
+        "mumu": true,
+        "nox": false,
+        "memu": false,
+        "custom_ports": [],
+        "custom_devices": []
+    }
+}
