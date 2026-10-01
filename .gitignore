@@ -2,10 +2,11 @@
 # Git Ignore - METINSTA
 # ==============================================================================
 
-# Private Configurations & Secrets
-config.json
-credentials.csv
-service_account.json
+# Local / Private Backups & Overrides
+*.local.*
+*.private.*
+*.real.*
+*.backup.*
 
 # Telegram Session Files
 *.session
@@ -57,7 +58,6 @@ venv.bak/
 # Environment Variables & Local Settings
 .env
 .env.*
-!.env.example
 
 # Logs and databases
 *.log

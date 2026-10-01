@@ -43,12 +43,9 @@ AutoMetaInstaBot & Multi-Emulator Dashboard for Instagram automation, Telegram b
    ```
 
 3. **Configure Settings:**
-   - Copy `config.example.json` to `config.json`:
-     ```bash
-     copy config.example.json config.json
-     ```
    - Update your Telegram credentials, Google Sheets ID, and 2Captcha API keys in `config.json`.
-   - If using Google Sheets, copy `service_account.example.json` to `service_account.json` and insert your service account credentials.
+   - If using Google Sheets, insert your Google service account credentials in `service_account.json`.
+   - Update `credentials.csv` with account logins if using CSV authentication.
    - (Optional) Populate `images/` directory with verification photos if needed.
 
 ---
