@@ -1,0 +1,65 @@
+# names.txt - List of names / usernames for Custom Cookies mode
+# You can format lines as:
+#   First Last        (e.g., Liam Smith)
+#   First, Last       (e.g., Liam, Smith)
+#   username          (e.g., liam_smith)
+Liam Smith
+Noah Johnson
+Oliver Williams
+James Brown
+Elijah Jones
+William Garcia
+Henry Miller
+Lucas Davis
+Benjamin Rodriguez
+Theodore Martinez
+Mateo Hernandez
+Levi Lopez
+Sebastian Gonzalez
+Daniel Wilson
+Jack Anderson
+Alexander Thomas
+Owen Taylor
+Asher Moore
+Samuel Jackson
+Ethan Martin
+John Lee
+David Perez
+Joseph Thompson
+Carter White
+Wyatt Harris
+Matthew Sanchez
+Luke Clark
+Julian Ramirez
+Isaac Lewis
+Jayden Robinson
+Nathan Walker
+Anthony Young
+Dylan Allen
+Leo King
+Thomas Wright
+Gabriel Scott
+Andrew Torres
+Logan Nguyen
+Anthony Hill
+Ezra Flores
+Emma Watson
+Olivia Clark
+Ava Robinson
+Sophia Davis
+Isabella Miller
+Mia Wilson
+Charlotte Moore
+Amelia Taylor
+Harper Anderson
+Evelyn Thomas
+Abigail Jackson
+Emily White
+Ella Harris
+Elizabeth Martin
+Sofia Thompson
+Avery Garcia
+Camila Martinez
+Aria Robinson
+Scarlett Clark
+Victoria Rodriguez

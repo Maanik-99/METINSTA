@@ -1,0 +1,529 @@
+====================================================================================================
+                        🤖 AUTOMETAINSTABOT - COMPLETE WORKFLOW STEPS GUIDE
+====================================================================================================
+এই ফাইলে প্রোজেক্টের শুরু থেকে শেষ পর্যন্ত সমস্ত ধাপ (Step-by-Step) ক্রমানুসারে সাজানো হয়েছে।
+আপনি যদি ম্যানুয়ালি কোনো স্টেপের নিয়ম, টাইমার, বা লজিক এডিট করেন, তাহলে নিচের 
+[CODE LOCATION] দেখে আমি সহজেই কোডের সংশ্লিষ্ট ফাইলে গিয়ে পরিবর্তন করতে পারবো।
+
+💡 নিয়ম (HOW TO USE):
+1. প্রতিটি স্টেপের একটি নির্দিষ্ট ID রয়েছে: [STEP-01], [STEP-02] ... [STEP-43]।
+2. আপনি যেকোনো স্টেপের "CUSTOM USER EDIT / আপনার পরিবর্তন" অংশে আপনার কাঙ্ক্ষিত পরিবর্তন লিখে সেভ করতে পারেন।
+3. চ্যাটে এসে শুধু বলবেন: "STEPS_FLOW_GUIDE.txt এর STEP-XX অনুযায়ী কোড আপডেট করো।"
+====================================================================================================
+
+
+====================================================================================================
+📌 PHASE 1: সিস্টেম স্টার্টআপ এবং কনফিগারেশন ইনিশিয়ালাইজেশন (STARTUP & INITIALIZATION)
+====================================================================================================
+
+[STEP-01] GUI ড্যাশবোর্ড ও কনফিগারেশন লোডিং (Config & Dashboard Launch)
+----------------------------------------------------------------------------------------------------
+• বিবরণ: config.json থেকে Telegram সেটিংস, প্রক্সি, টার্গেট বট (@Taskl1_bot / @PayGoeasy_bot), এবং ওয়ার্কার অপশন লোড করে CustomTkinter ড্যাশবোর্ড চালু করা হয়।
+• CODE LOCATION:
+  - ফাইল: insta_emulator_gui.py (Lines 1 - 250)
+  - ফাইল: email_service.py -> load_config() (Lines 95 - 110)
+  - কনফিগ: config.json
+• সংশ্লিষ্ট প্যারামিটার:
+  - task_mode: "cookies" অথবা "2fa" অথবা "2fa_cookies"
+  - auto_repeat_tasks: true / false
+• CUSTOM USER EDIT / আপনার পরিবর্তন:
+  [এখানে আপনি কোনো পরিবর্তন করতে চাইলে লিখুন]
+
+
+[STEP-02] এমুলেটর স্ক্যান ও সনাক্তকরণ (Scan & Detect LDPlayer / MuMu Player)
+----------------------------------------------------------------------------------------------------
+• বিবরণ: পিসিতে চালু বা বন্ধ থাকা সমস্ত LDPlayer এবং MuMu Player ইনস্ট্যান্স ও ADB সিরিয়াল পোর্ট স্ক্যান করা হয়।
+• CODE LOCATION:
+  - ফাইল: emulator_manager.py -> scan_all_instances() (Lines 120 - 280)
+  - ফাইল: autometainstabot.py -> get_unique_devices() (Lines 1720 - 1780)
+• সংশ্লিষ্ট প্যারামিটার:
+  - এমুলেটর পাথ: ldconsole.exe / MuMuManager.exe
+  - ডিফল্ট পোর্ট: 5555, 16384 ইত্যাদি
+• CUSTOM USER EDIT / আপনার পরিবর্তন:
+  [এখানে আপনি কোনো পরিবর্তন করতে চাইলে লিখুন]
+
+
+[STEP-03] টেলিগ্রাম একাউন্ট পুল ইনিশিয়ালাইজেশন (Telegram Account Pool & Sessions)
+----------------------------------------------------------------------------------------------------
+• বিবরণ: config.json এ থাকা ফোন নম্বর ও .session ফাইল দিয়ে টেলিগ্রাম একাউন্ট পুলে লগইন ভেরিফাই করা হয় এবং প্রতি এমুলেটরে নির্দিষ্ট একাউন্ট অ্যাসাইন করা হয়।
+• CODE LOCATION:
+  - ফাইল: autometainstabot.py -> TelegramAccountPool (Lines 140 - 290)
+  - ফাইল: autometainstabot.py -> TasklyWorker.__init__() (Lines 3848 - 3950)
+• সংশ্লিষ্ট প্যারামিটার:
+  - Flood wait cooldown: স্বয়ংক্রিয় একাউন্ট রোটেশন
+• CUSTOM USER EDIT / আপনার পরিবর্তন:
+  [এখানে আপনি কোনো পরিবর্তন করতে চাইলে লিখুন]
+
+
+
+====================================================================================================
+📌 PHASE 2: টাস্ক শুরু এবং টেলিগ্রাম বট থেকে ক্রেডেনশিয়াল সংগ্রহ (TASK FETCHING VIA TELEGRAM)
+====================================================================================================
+
+[STEP-04] এমুলেটর ডিভাইস আইডেন্টিটি রেন্ডমাইজেশন (Randomize Device Identity)
+----------------------------------------------------------------------------------------------------
+• বিবরণ: প্রতিটি সাইকেলের শুরুতে এমুলেটরের IMEI, Android ID, MAC address পরিবর্তন করা হয় যাতে মেটা বা ইনস্টাগ্রাম ডিটেক্ট করতে না পারে। সাথে সাথে ব্রাউজারের পুরোনো ডেটা ক্লিয়ার করা হয়।
+• CODE LOCATION:
+  - ফাইল: autometainstabot.py -> randomize_emulator_identity() (Lines 2260 - 2350)
+  - ফাইল: autometainstabot.py -> run_automation_loop() (Lines 4701 - 4709)
+• সংশ্লিষ্ট কমান্ড:
+  - adb shell pm clear com.via.browser
+• CUSTOM USER EDIT / আপনার পরিবর্তন:
+  [এখানে আপনি কোনো পরিবর্তন করতে চাইলে লিখুন]
+
+
+[STEP-05] টেলিগ্রাম বটে টাস্ক রিকোয়েস্ট পাঠানো (/start or 📋 Tasks)
+----------------------------------------------------------------------------------------------------
+• বিবরণ: টার্গেট বটে (@Taskl1_bot বা @PayGoeasy_bot) `/start` মেসেজ পাঠানো হয় এবং টাস্ক ক্রেডেনশিয়াল না পাওয়া পর্যন্ত অপেক্ষা করা হয় (টাইমআউট ৭৫ সেকেন্ড)। কোনো কারণে ইন্টারনেট ড্রপ হলে বা 'Cannot send requests while disconnected' আসলে বট থামবে না—স্বয়ংক্রিয়ভাবে ১৮০ সেকেন্ড পর্যন্ত নেট ফেরার জন্য অপেক্ষা করে রিকানেক্ট করবে এবং সম্ভব হলে টাস্ক চালিয়ে যাবে, অন্যথায় ক্লিন রিস্টার্ট করবে।
+• CODE LOCATION:
+  - ফাইল: autometainstabot.py -> ensure_connected() & safe_send_message() (Lines 4137 - 4250)
+  - ফাইল: autometainstabot.py -> run_automation_loop()
+• সংশ্লিষ্ট প্যারামিটার:
+  - wait timeout: 75.0s
+  - network reconnect wait: 180s (auto wait for net & seamless continue/restart)
+  - consecutive_timeouts limit: 2 (অটো শিফট অন থাকলে বট সুইচ করবে)
+• CUSTOM USER EDIT / আপনার পরিবর্তন:
+  [send_message disconnected আসলে wait করে net আসলে continue/restart করবে -> UPDATED & FIXED IN CODE]
+
+
+[STEP-06] বট থেকে তথ্য পার্সিং (First Name, Username & Password Extraction)
+----------------------------------------------------------------------------------------------------
+• বিবরণ: টেলিগ্রাম বটের মেসেজ থেকে ইউজারের First Name, Last Name, টার্গেট Login/Username এবং Password স্বয়ংক্রিয়ভাবে রেজেক্স দিয়ে সংগ্রহ করা হয়।
+• CODE LOCATION:
+  - ফাইল: autometainstabot.py -> TasklyWorker._bot_handler() / handle_bot_message() (Lines 4300 - 4550)
+• সংশ্লিষ্ট ফিল্ডস:
+  - first_name, last_name, login, password
+• CUSTOM USER EDIT / আপনার পরিবর্তন:
+  [এখানে আপনি কোনো পরিবর্তন করতে চাইলে লিখুন]
+
+
+
+====================================================================================================
+📌 PHASE 3: মেটা এআই একাউন্ট রেজিস্ট্রেশন (100% PURE HTTP API META REGISTRATION)
+====================================================================================================
+
+[STEP-07] টেম্প মেইল জেনারেশন (Generate Disposable Email)
+----------------------------------------------------------------------------------------------------
+• বিবরণ: TempMail Ninja (Socket.IO) অথবা Mail.td / Mail.cx এর মাধ্যমে একটি ডিসপোজেবল ইমেইল অ্যাড্রেস এবং কানেকশন টোকেন তৈরি করা হয়।
+• CODE LOCATION:
+  - ফাইল: autometainstabot.py -> create_meta_account_task() (Lines 1520 - 1550)
+  - ফাইল: email_service.py -> fallback_generate_temp_email()
+  - ফাইল: NINJA.PY -> TempMailNinjaAPI
+  - ফাইল: mail_td.py / mail_cx.py
+• সংশ্লিষ্ট প্যারামিটার:
+  - Retry attempt: ৩ বার
+• CUSTOM USER EDIT / আপনার পরিবর্তন:
+  [এখানে আপনি কোনো পরিবর্তন করতে চাইলে লিখুন]
+
+
+[STEP-08] মেটা অথ সেশন ইনিশিয়ালাইজেশন (Meta Auth Request Session Init)
+----------------------------------------------------------------------------------------------------
+• বিবরণ: auth.meta.com এ Pure HTTP ریکুয়েস্টের মাধ্যমে ওআইডিসি (OIDC) সেশন, হেডার্স, ডিভাইস ফিঙ্গারপ্রিন্ট ও স্পিন প্যারামিটার ইনিশিয়ালাইজ করা হয়।
+• CODE LOCATION:
+  - ফাইল: autometainstabot.py -> MetaAuthClient.init_session() (Lines 560 - 640)
+  - ফাইল: autometainstabot.py -> create_meta_account_task() (Lines 1561 - 1567)
+• CUSTOM USER EDIT / আপনার পরিবর্তন:
+  [এখানে আপনি কোনো পরিবর্তন করতে চাইলে লিখুন]
+
+
+[STEP-09] ইমেইল প্রাপ্যতা যাচাই (Check Contact Point Availability)
+----------------------------------------------------------------------------------------------------
+• বিবরণ: মেটা এপিআইতে চেক করা হয় যে টেম্প মেইলটি রেজিস্ট্রেশনের জন্য গ্রহণযোগ্য কিনা।
+• CODE LOCATION:
+  - ফাইল: autometainstabot.py -> MetaAuthClient.check_contact_point_availability() (Lines 660 - 710)
+  - ফাইল: autometainstabot.py -> create_meta_account_task() (Line 1569)
+• CUSTOM USER EDIT / আপনার পরিবর্তন:
+  [এখানে আপনি কোনো পরিবর্তন করতে চাইলে লিখুন]
+
+
+[STEP-10] পাসওয়ার্ড এনক্রিপশন ও চেক (Password Encryption & Check)
+----------------------------------------------------------------------------------------------------
+• বিবরণ: বটের দেওয়া পাসওয়ার্ডকে TweetNaCl SealedBox + AES-256-GCM এর মাধ্যমে মেটার পাবলিক কি দিয়ে এনক্রিপ্ট করে মেটাতে চেক পাঠানো হয়।
+• CODE LOCATION:
+  - ফাইল: autometainstabot.py -> encrypt_meta_password() (Lines 358 - 400)
+  - ফাইল: autometainstabot.py -> MetaAuthClient.check_password() (Lines 712 - 760)
+  - ফাইল: autometainstabot.py -> create_meta_account_task() (Line 1572)
+• CUSTOM USER EDIT / আপনার পরিবর্তন:
+  [এখানে আপনি কোনো পরিবর্তন করতে চাইলে লিখুন]
+
+
+[STEP-11] জন্মতারিখ ও নাম সাবমিশন (DOB & Name Verification)
+----------------------------------------------------------------------------------------------------
+• বিবরণ: ১৯৯২-২০০২ এর মধ্যে রেন্ডম জন্মতারিখ এবং টেলিগ্রাম বট থেকে পাওয়া First/Last Name মেটাতে সাবমিট করা হয়।
+• CODE LOCATION:
+  - ফাইল: autometainstabot.py -> MetaAuthClient.check_date_of_birth() (Lines 762 - 810)
+  - ফাইল: autometainstabot.py -> create_meta_account_task() (Lines 1556 - 1575)
+• CUSTOM USER EDIT / আপনার পরিবর্তন:
+  [এখানে আপনি কোনো পরিবর্তন করতে চাইলে লিখুন]
+
+
+[STEP-12] ইউজারনেম ভ্যালিডেশন (Username Handle Check & Suggestion)
+----------------------------------------------------------------------------------------------------
+• বিবরণ: টার্গেট ইউজারনেম মেটাতে অ্যাভেইলেবল আছে কিনা চেক করা হয়। না থাকলে মেটার সাজেশন বা অল্টারনেটিভ নাম তৈরি করা হয়।
+• CODE LOCATION:
+  - ফাইল: autometainstabot.py -> MetaAuthClient.check_profile() (Lines 830 - 870)
+  - ফাইল: autometainstabot.py -> create_meta_account_task() (Lines 1577 - 1593)
+• CUSTOM USER EDIT / আপনার পরিবর্তন:
+  [এখানে আপনি কোনো পরিবর্তন করতে চাইলে লিখুন]
+
+
+[STEP-13] মেটা রেজিস্ট্রেশন সাবমিশন (Submit Registration & Trigger OTP)
+----------------------------------------------------------------------------------------------------
+• বিবরণ: সকল ক্রেডেনশিয়াল দিয়ে মেটাতে ফাইনাল রেজিস্ট্রেশন রিকোয়েস্ট পাঠানো হয়, যার ফলে টেম্প মেইলে ৬ ডিজিটের ওটিপি চলে যায়।
+• CODE LOCATION:
+  - ফাইল: autometainstabot.py -> MetaAuthClient.register_save_credentials() (Lines 875 - 940)
+  - ফাইল: autometainstabot.py -> create_meta_account_task() (Lines 1595 - 1602)
+• CUSTOM USER EDIT / আপনার পরিবর্তন:
+  [এখানে আপনি কোনো পরিবর্তন করতে চাইলে লিখুন]
+
+
+[STEP-14] ইমেইল থেকে ৬-ডিজিটের ওটিপি সংগ্রহ (Poll & Extract 6-Digit Email OTP)
+----------------------------------------------------------------------------------------------------
+• বিবরণ: টেম্প মেইলের ইনবক্স পোল করে মেটার পাঠানো ৬-ডিজিটের কনফার্মেশন কোড সংগ্রহ করা হয় (ম্যাক্সিমাম ৬০ সেকেন্ড ওয়েট)।
+• CODE LOCATION:
+  - ফাইল: autometainstabot.py -> fallback_fetch_otp() / ninja_client.wait_for_otp()
+  - ফাইল: autometainstabot.py -> create_meta_account_task() (Lines 1605 - 1630)
+• সংশ্লিষ্ট প্যারামিটার:
+  - timeout: 60s
+  - expected_digits: 6
+• CUSTOM USER EDIT / আপনার পরিবর্তন:
+  [এখানে আপনি কোনো পরিবর্তন করতে চাইলে লিখুন]
+
+
+[STEP-15] GraphQL ইমেইল ওটিপি কনফার্মেশন (Confirm Email OTP via GraphQL)
+----------------------------------------------------------------------------------------------------
+• বিবরণ: প্রাপ্ত ৬ ডিজিটের কোড GraphQL mutation `FRLConfirmEmailMutation` দিয়ে মেটাতে কনফার্ম করা হয়।
+• CODE LOCATION:
+  - ফাইল: autometainstabot.py -> MetaAuthClient.confirm_email_otp() (Lines 945 - 980)
+  - ফাইল: autometainstabot.py -> create_meta_account_task() (Lines 1632 - 1635)
+• CUSTOM USER EDIT / আপনার পরিবর্তন:
+  [এখানে আপনি কোনো পরিবর্তন করতে চাইলে লিখুন]
+
+
+[STEP-16] হিউম্যান ভেরিফিকেশন ও চেকপয়েন্ট সলভ (Solve Checkpoint / 2Captcha UFAC)
+----------------------------------------------------------------------------------------------------
+• বিবরণ: যদি চেকপয়েন্ট আসে ("Confirm you are human"), তবে ২ক্যাপচা এপিআই ও রেন্ডম ভেরিফিকেশন ছবি আপলোডের মাধ্যমে ১০০% ব্যাকগ্রাউন্ডে সলভ করা হয়।
+• CODE LOCATION:
+  - ফাইল: autometainstabot.py -> MetaAuthClient.check_for_checkpoint() (Lines 1050 - 1090)
+  - ফাইল: autometainstabot.py -> MetaAuthClient.resolve_ufac_checkpoint() (Lines 1110 - 1280)
+  - ফাইল: autometainstabot.py -> create_meta_account_task() (Lines 1637 - 1644)
+• CUSTOM USER EDIT / আপনার পরিবর্তন:
+  [এখানে আপনি কোনো পরিবর্তন করতে চাইলে লিখুন]
+
+
+[STEP-17] ওআইডিসি সেশন কম্প্লিশন (Complete OIDC Authorization Flow)
+----------------------------------------------------------------------------------------------------
+• বিবরণ: একাউন্ট সফলভাবে একটিভ করার পর মেটার ওআইডিসি ফ্লো শেষ করা হয়। মেটা একাউন্ট তৈরির কাজ সফল!
+• CODE LOCATION:
+  - ফাইল: autometainstabot.py -> MetaAuthClient.complete_oidc_flow() (Lines 1285 - 1340)
+  - ফাইল: autometainstabot.py -> create_meta_account_task() (Lines 1646 - 1649)
+• CUSTOM USER EDIT / আপনার পরিবর্তন:
+  [এখানে আপনি কোনো পরিবর্তন করতে চাইলে লিখুন]
+
+
+
+====================================================================================================
+📌 PHASE 4: অ্যান্ড্রয়েড এমুলেটর অটোমেশন (VIA BROWSER INSTAGRAM UI AUTOMATION)
+====================================================================================================
+
+[STEP-18] ব্রাউজার ক্লিন এবং ফ্রেশ স্টার্ট (Clean Via Browser Data)
+----------------------------------------------------------------------------------------------------
+• বিবরণ: এমুলেটরে Via ব্রাউজার (com.via.browser) সম্পূর্ণ ফোর্স স্টপ ও ডাটা ক্লিয়ার করা হয়।
+• CODE LOCATION:
+  - ফাইল: autometainstabot.py -> run_instagram_pipeline() (Lines 2952 - 2956)
+• সংশ্লিষ্ট কমান্ড:
+  - adb shell am force-stop com.via.browser
+  - adb shell pm clear com.via.browser
+• CUSTOM USER EDIT / আপনার পরিবর্তন:
+  [এখানে আপনি কোনো পরিবর্তন করতে চাইলে লিখুন]
+
+
+[STEP-19] ইনস্টাগ্রাম লগইন পেজ ওপেন (Launch Instagram Login URL in Browser)
+----------------------------------------------------------------------------------------------------
+• বিবরণ: ব্রাউজারে ইনস্টাগ্রাম লগইন লিঙ্ক (https://www.instagram.com/accounts/login/) ওপেন করা হয়।
+• CODE LOCATION:
+  - ফাইল: autometainstabot.py -> run_instagram_pipeline() (Lines 2958 - 2960)
+• সংশ্লিষ্ট কমান্ড:
+  - adb shell am start -a android.intent.action.VIEW -d "https://www.instagram.com/accounts/login/" com.via.browser
+• CUSTOM USER EDIT / আপনার পরিবর্তন:
+  [এখানে আপনি কোনো পরিবর্তন করতে চাইলে লিখুন]
+
+
+[STEP-20] ব্রাউজার টার্মস এবং কুকিজ একসেপ্ট (Accept Browser Terms & Cookies Banner)
+----------------------------------------------------------------------------------------------------
+• বিবরণ: ব্রাউজারের প্রথম ওপেনিং এ টার্মস পেজ আসলে "Agree" এবং কুকিজ ব্যানার আসলে "Allow all cookies" বাটনে ক্লিক করা হয়।
+• CODE LOCATION:
+  - ফাইল: autometainstabot.py -> run_instagram_pipeline() (Lines 3067 - 3080)
+• স্ক্রিন নেম: BROWSER_TERMS_PAGE, INSTAGRAM_COOKIE_PAGE
+• CUSTOM USER EDIT / আপনার পরিবর্তন:
+  [এখানে আপনি কোনো পরিবর্তন করতে চাইলে লিখুন]
+
+
+[STEP-21] ক্রেডেনশিয়াল এন্ট্রি ও লগইন সাবমিশন (Enter Meta Email & Password, Tap 'Log In')
+----------------------------------------------------------------------------------------------------
+• বিবরণ: মেটা একাউন্টের ইমেইল এবং পাসওয়ার্ড ইনপুট বক্সে টাইপ করার পর ভার্চুয়াল কিবোর্ড ক্লোজ হতে ০.৫ সেকেন্ড অপেক্ষা করা হয়। এরপর find_instagram_login_button() দিয়ে নির্ভুলভাবে 'Log In' বাটন ডিটেক্ট করে ট্যাপ করা হয় (সাথে ব্যাকআপ Enter কি প্রেরণ)। যদি পেজ আটকে থাকে, তবে প্রতি ৪ সেকেন্ড পর পর স্বয়ংক্রিয়ভাবে পুনরায় বাটন ট্যাপ করার রিট্রাই যুক্ত করা হয়েছে।
+• CODE LOCATION:
+  - ফাইল: autometainstabot.py -> find_instagram_login_button() & run_instagram_pipeline() (Lines 2138 - 2185, 3163 - 3218)
+• স্ক্রিন নেম: INSTAGRAM_LOGIN_PAGE
+• সংশ্লিষ্ট প্যারামিটার:
+  - কিবোর্ড হাইড বাফার: 0.5s
+  - একটিভ রিট্রাই সাইকেল: check #2, #5, #8
+• CUSTOM USER EDIT / আপনার পরিবর্তন:
+  [login button tha thil loro maje maje clik kore na -> UPDATED & FIXED IN CODE]
+
+
+[STEP-22] পাসওয়ার্ড সেভ পপআপ ক্যানসেল (Dismiss Save Password Popup)
+----------------------------------------------------------------------------------------------------
+• বিবরণ: যদি ব্রাউজারে পাসওয়ার্ড সেভ করার পপআপ আসে, তবে "Cancel" বাটনে ট্যাপ করে তা বাতিল করা হয়।
+• CODE LOCATION:
+  - ফাইল: autometainstabot.py -> run_instagram_pipeline() (Lines 3220 - 3224)
+• স্ক্রিন নেম: INSTAGRAM_SAVE_PASSWORD_POPUP
+• CUSTOM USER EDIT / আপনার পরিবর্তন:
+  [এখানে আপনি কোনো পরিবর্তন করতে চাইলে লিখুন]
+
+
+[STEP-23] নো একাউন্ট ফাউন্ড স্ক্রিনে মেটা কার্ড সিলেকশন (Target Meta Account Card Below 'OR')
+----------------------------------------------------------------------------------------------------
+• বিবরণ: এই পেজে আসার সাথে সাথে স্বয়ংক্রিয়ভাবে নিচে স্ক্রল (0.74h -> 0.32h swipe up) করা হয় যাতে মেটা কার্ড পুরোপুরি স্ক্রিনে দৃশ্যমান হয়। 'Find another account' বা 'Forgotten account' বাটনে কখনোই ক্লিক যেন না পড়ে সেজন্য স্ট্রিক্ট ব্ল্যাকলিস্ট ফিল্টার এবং ট্যাপের স্থানাঙ্ক নিচের অংশে [0.78h, 0.86h] লক করা হয়েছে।
+• CODE LOCATION:
+  - ফাইল: autometainstabot.py -> find_instagram_account_tile() & run_instagram_pipeline() (Lines 2630 - 2685, 3230 - 3258)
+• স্ক্রিন নেম: INSTAGRAM_NO_ACCOUNT_FOUND
+• সংশ্লিষ্ট লজিক:
+  - এন্ট্রি নেওয়ার সাথে সাথে ইমিডিয়েট স্ক্রল আপ (Swipe up 350ms)
+  - নিরাপদ ট্যাপের জন্য y-স্থানাঙ্ক 0.78h থেকে 0.86h এর মধ্যে লকড (Forget / Find another account সম্পূর্ণ বাইপাস)
+• CUSTOM USER EDIT / আপনার পরিবর্তন:
+  [akhan a ai page a asei scroll lore niche jabe , kokhoi forget accouns button a click korbe na , -> UPDATED & FIXED IN CODE]
+
+
+[STEP-24] ফুল নেম ইনপুট (What's your name? Screen)
+----------------------------------------------------------------------------------------------------
+• বিবরণ: "What's your name?" স্ক্রিনে টার্গেট লগইন/নাম টাইপ করে "Next" বাটনে ট্যাপ করা হয়।
+• CODE LOCATION:
+  - ফাইল: autometainstabot.py -> run_instagram_pipeline() (Lines 3193 - 3212)
+• স্ক্রিন নেম: INSTAGRAM_NAME_PAGE
+• CUSTOM USER EDIT / আপনার পরিবর্তন:
+  [এখানে আপনি কোনো পরিবর্তন করতে চাইলে লিখুন]
+
+
+[STEP-25] ইউজারনেম ভেরিফিকেশন ও অটো-সাজেশন হ্যান্ডলিং (Create a Username Screen)
+----------------------------------------------------------------------------------------------------
+• বিবরণ: "Create a username" স্ক্রিনে স্বয়ংক্রিয়ভাবে ফিল হওয়া নামে "Next" দেওয়া হয়। যদি ইউজারনেম নট-অ্যাভেইলেবল থাকে, তবে Back (<) চেপে পুনরায় Next দিয়ে অটো-সাজেশন ইউজারনেম নেওয়া হয়।
+• CODE LOCATION:
+  - ফাইল: autometainstabot.py -> run_instagram_pipeline() (Lines 3213 - 3256)
+• স্ক্রিন নেম: INSTAGRAM_USERNAME_PAGE
+• CUSTOM USER EDIT / আপনার পরিবর্তন:
+  [এখানে আপনি কোনো পরিবর্তন করতে চাইলে লিখুন]
+
+
+[STEP-26] একাউন্ট লিঙ্ক কনফার্মেশন (Allow and Continue)
+----------------------------------------------------------------------------------------------------
+• বিবরণ: ইনস্টাগ্রাম ও মেটা একাউন্ট লিঙ্কিং পেজে "Allow and continue" বাটনে ক্লিক করা হয়।
+• CODE LOCATION:
+  - ফাইল: autometainstabot.py -> run_instagram_pipeline() (Lines 3257 - 3261)
+• স্ক্রিন নেম: INSTAGRAM_ALLOW_CONTINUE_PAGE
+• CUSTOM USER EDIT / আপনার পরিবর্তন:
+  [এখানে আপনি কোনো পরিবর্তন করতে চাইলে লিখুন]
+
+
+[STEP-27] টার্মস অফ ইউজ একসেপ্ট (Terms of Use / I agree)
+----------------------------------------------------------------------------------------------------
+• বিবরণ: ইনস্টাগ্রামের "Terms of Use" পেজে "I agree" বাটনে ট্যাপ করা হয়।
+• CODE LOCATION:
+  - ফাইল: autometainstabot.py -> run_instagram_pipeline() (Lines 3262 - 3270)
+• স্ক্রিন নেম: INSTAGRAM_AGREE_TERMS_PAGE
+• CUSTOM USER EDIT / আপনার পরিবর্তন:
+  [এখানে আপনি কোনো পরিবর্তন করতে চাইলে লিখুন]
+
+
+[STEP-28] লগইন ইনফো সেভ ও ট্রানজিশন (Save Your Login Info)
+----------------------------------------------------------------------------------------------------
+• বিবরণ: রেজিস্ট্রেশন শেষ হওয়ার পর "Save your login info" পেজে "Save" বাটনে ক্লিক করা হয়।
+• CODE LOCATION:
+  - ফাইল: autometainstabot.py -> run_instagram_pipeline() (Lines 3271 - 3360, 3374 - 3410)
+• স্ক্রিন নেম: INSTAGRAM_SAVE_INFO_PAGE, INSTAGRAM_REGISTERED_PAGE
+• CUSTOM USER EDIT / আপনার পরিবর্তন:
+  [এখানে আপনি কোনো পরিবর্তন করতে চাইলে লিখুন]
+
+
+
+====================================================================================================
+📌 PHASE 5: কুকিজ মোড এক্সট্রাকশন (COOKIES EXTRACTION - IF MODE IS COOKIES)
+====================================================================================================
+
+[STEP-29] ভিয়া ব্রাউজার থেকে ইনস্টাগ্রাম কুকিজ এক্সট্রাকশন (Extract Cookies from Via Browser)
+----------------------------------------------------------------------------------------------------
+• বিবরণ: ভিয়া ব্রাউজারের Site Info / ডেটা থেকে সম্পূর্ণ সেশন কুকিজ (sessionid, csrftoken, ds_user_id ইত্যাদি) সংগ্রহ করা হয়।
+• CODE LOCATION:
+  - ফাইল: autometainstabot.py -> extract_via_cookies() (Lines 2400 - 2480)
+  - ফাইল: autometainstabot.py -> run_instagram_pipeline() (Lines 3285 - 3318)
+• সংশ্লিষ্ট প্যারামিটার:
+  - সর্বোচ্চ চেষ্টা: ৩ বার
+• CUSTOM USER EDIT / আপনার পরিবর্তন:
+  [এখানে আপনি কোনো পরিবর্তন করতে চাইলে লিখুন]
+
+
+[STEP-30] কুকিজ টেলিগ্রাম বটে জমা দেওয়া (Submit Cookies to Telegram Bot)
+----------------------------------------------------------------------------------------------------
+• বিবরণ: সংগৃহীত কুকিজ টেলিগ্রাম বটে মেসেজ আকারে সেন্ড করা হয় (Cookies Mode এ)।
+• CODE LOCATION:
+  - ফাইল: autometainstabot.py -> run_automation_loop() (Lines 4836 - 4841)
+• CUSTOM USER EDIT / আপনার পরিবর্তন:
+  [এখানে আপনি কোনো পরিবর্তন করতে চাইলে লিখুন]
+
+
+
+====================================================================================================
+📌 PHASE 6: টু-ফ্যাক্টর অথেনটিকেশন (2FA PIPELINE - IF MODE IS 2FA OR 2FA_COOKIES)
+====================================================================================================
+
+[STEP-31] টু-ফ্যাক্টর ইউআরএল ওপেন (Navigate to 2FA Overview URL)
+----------------------------------------------------------------------------------------------------
+• বিবরণ: ইনস্টাগ্রাম সেভ হওয়ার সাথে সাথে ব্রাউজারে মেটার 2FA লিঙ্ক (https://auth.meta.com/two_factor/overview) ওপেন করা হয়।
+• CODE LOCATION:
+  - ফাইল: autometainstabot.py -> run_instagram_pipeline() (Lines 3365 - 3369, 3407 - 3409)
+• সংশ্লিষ্ট কমান্ড:
+  - adb shell am start -a android.intent.action.VIEW -d "https://auth.meta.com/two_factor/overview" com.via.browser
+• CUSTOM USER EDIT / আপনার পরিবর্তন:
+  [এখানে আপনি কোনো পরিবর্তন করতে চাইলে লিখুন]
+
+
+[STEP-32] এক্সট্রা প্রোটেকশন ও ইনস্টাগ্রাম প্রোফাইল সিলেক্ট (Select Instagram Card)
+----------------------------------------------------------------------------------------------------
+• বিবরণ: "Set up extra protection for your Meta Account" স্ক্রিনে ইনস্টাগ্রাম একাউন্টের কার্ডে ক্লিক করা হয়।
+• CODE LOCATION:
+  - ফাইল: autometainstabot.py -> run_instagram_pipeline() (Lines 3506 - 3518, 3660 - 3682)
+• স্ক্রিন নেম: TWO_FACTOR_EXTRA_PROTECTION_PAGE, TWO_FACTOR_CHOOSE_ACCOUNT_PAGE
+• CUSTOM USER EDIT / আপনার পরিবর্তন:
+  [এখানে আপনি কোনো পরিবর্তন করতে চাইলে লিখুন]
+
+
+[STEP-33] 2FA মেথড সিলেক্ট (Choose Method: Authentication App)
+----------------------------------------------------------------------------------------------------
+• বিবরণ: 2FA মেথড হিসেবে "Authentication app" সিলেক্ট করে "Continue" / "Next" বাটনে ট্যাপ করা হয়।
+• CODE LOCATION:
+  - ফাইল: autometainstabot.py -> run_instagram_pipeline() (Lines 3683 - 3694)
+• স্ক্রিন নেম: TWO_FACTOR_CHOOSE_METHOD_PAGE
+• CUSTOM USER EDIT / আপনার পরিবর্তন:
+  [এখানে আপনি কোনো পরিবর্তন করতে চাইলে লিখুন]
+
+
+[STEP-34] ইমেইল সিকিউরিটি ওটিপি চ্যালেঞ্জ (Check Your Email - 8-Digit OTP Verification)
+----------------------------------------------------------------------------------------------------
+• বিবরণ: মেটা যদি ইমেইল সিকিউরিটি কোড চায় ("Check your email"), তখন টেম্প মেইল থেকে ৮-ডিজিটের কোড এনে ইনপুট বক্সে টাইপ করে "Continue" ট্যাপ করা হয়।
+• CODE LOCATION:
+  - ফাইল: autometainstabot.py -> fetch_email_security_code() (Lines 2900 - 2948)
+  - ফাইল: autometainstabot.py -> run_instagram_pipeline() (Lines 3520 - 3659)
+• স্ক্রিন নেম: TWO_FACTOR_CHECK_EMAIL_PAGE
+• সংশ্লিষ্ট প্যারামিটার:
+  - ওটিপি ওয়েট টাইম: ৩০ সেকেন্ড
+  - কাঙ্ক্ষিত দৈর্ঘ্য: ৮ ডিজিট
+• CUSTOM USER EDIT / আপনার পরিবর্তন:
+  [এখানে আপনি কোনো পরিবর্তন করতে চাইলে লিখুন]
+
+
+[STEP-35] ৩২-অক্ষরের সিক্রেট কি সংগ্রহ (Extract 32-Character 2FA Secret Key)
+----------------------------------------------------------------------------------------------------
+• বিবরণ: 2FA সেটআপ স্ক্রিন স্ক্রল করে এবং স্ক্রিন টেক্সট / ক্লিপবোর্ড কপি থেকে ৩২ অক্ষরের Base32 2FA Secret Key বের করা হয়।
+• CODE LOCATION:
+  - ফাইল: autometainstabot.py -> extract_2fa_secret_and_copy() (Lines 2520 - 2580)
+  - ফাইল: autometainstabot.py -> run_instagram_pipeline() (Lines 3695 - 3748)
+• স্ক্রিন নেম: TWO_FACTOR_INSTRUCTIONS_PAGE, TWO_FACTOR_COPY_KEY_PAGE
+• সংশ্লিষ্ট ফিল্ড:
+  - two_factor_secret (ঠিক ৩২ ক্যারেক্টার)
+• CUSTOM USER EDIT / আপনার পরিবর্তন:
+  [এখানে আপনি কোনো পরিবর্তন করতে চাইলে লিখুন]
+
+
+[STEP-36] pyotp দিয়ে ৬-ডিজিটের TOTP কোড তৈরি (Generate 6-Digit TOTP via pyotp)
+----------------------------------------------------------------------------------------------------
+• বিবরণ: সংগৃহীত ৩২ অক্ষরের সিক্রেট কি ব্যবহার করে pyotp লাইব্রেরির মাধ্যমে রিয়েল-টাইম ৬-ডিজিটের TOTP কোড জেনারেট করা হয়।
+• CODE LOCATION:
+  - ফাইল: autometainstabot.py -> generate_totp_code() (Lines 2380 - 2390)
+  - ফাইল: autometainstabot.py -> run_instagram_pipeline() (Lines 3771 - 3785)
+• সংশ্লিষ্ট লাইব্রেরি:
+  - pyotp.TOTP(secret_key).now()
+• CUSTOM USER EDIT / আপনার পরিবর্তন:
+  [এখানে আপনি কোনো পরিবর্তন করতে চাইলে লিখুন]
+
+
+[STEP-37] TOTP কোড সাবমিট ও 2FA কনফার্ম (Enter Code & Confirm 2FA Active)
+----------------------------------------------------------------------------------------------------
+• বিবরণ: "Enter the 6-digit code" স্ক্রিনে TOTP কোড টাইপ করে "Next" বাটনে ট্যাপ করা হয়। এরপর "Two-factor authentication is on" নিশ্চিত করা হয়।
+• CODE LOCATION:
+  - ফাইল: autometainstabot.py -> run_instagram_pipeline() (Lines 3749 - 3833)
+• স্ক্রিন নেম: TWO_FACTOR_ENTER_CODE_PAGE, TWO_FACTOR_SUCCESS_PAGE
+• CUSTOM USER EDIT / আপনার পরিবর্তন:
+  [এখানে আপনি কোনো পরিবর্তন করতে চাইলে লিখুন]
+
+
+[STEP-38] টেলিগ্রাম বটে 2FA কি পাঠানো (Submit 2FA Secret Key to Telegram Bot)
+----------------------------------------------------------------------------------------------------
+• বিবরণ: ব্যাকগ্রাউন্ড টাস্কের মাধ্যমে ৩২ অক্ষরের 2FA Secret Key রিয়েল টাইমে টেলিগ্রাম বট (@Taskl1_bot / @PayGoeasy_bot) এ মেসেজ হিসেবে পাঠিয়ে দেওয়া হয়।
+• CODE LOCATION:
+  - ফাইল: autometainstabot.py -> handle_2fa_key_exchange() (Lines 4937 - 4950)
+  - ফাইল: autometainstabot.py -> run_automation_loop() (Lines 5030 - 5035)
+• CUSTOM USER EDIT / আপনার পরিবর্তন:
+  [এখানে আপনি কোনো পরিবর্তন করতে চাইলে লিখুন]
+
+
+
+====================================================================================================
+📌 PHASE 7: টাস্ক সমাপ্তি, ডেটা সিঙ্ক ও কুলডাউন (COMPLETION, CSV / GSHEET SYNC & COOLDOWN)
+====================================================================================================
+
+[STEP-39] বটে টাস্ক কমপ্লিশন কনফার্ম করা (Confirm '✅ Account registered' in Bot)
+----------------------------------------------------------------------------------------------------
+• বিবরণ: টেলিগ্রাম বটে '✅ Account registered' বাটনে ক্লিক করা হয় অথবা মেসেজ পাঠানো হয় এবং বট থেকে কনফার্মেশন রিপোর্ট আসার অপেক্ষা করা হয়।
+• CODE LOCATION:
+  - ফাইল: autometainstabot.py -> run_automation_loop() (Lines 4848 - 4869, 5055 - 5080)
+• সংশ্লিষ্ট বাটন:
+  - "Account registered", "Registered", "Confirm", "✅"
+• CUSTOM USER EDIT / আপনার পরিবর্তন:
+  [এখানে আপনি কোনো পরিবর্তন করতে চাইলে লিখুন]
+
+
+[STEP-40] লোকাল ক্রেডেনশিয়াল ফাইলে সেভ (Save to credentials.csv)
+----------------------------------------------------------------------------------------------------
+• বিবরণ: সম্পন্ন হওয়া একাউন্টের Email, Password, 2FA Secret, Username, Instance Name, Status এবং Cookies লোকাল credentials.csv ফাইলে লিখে রাখা হয়।
+• CODE LOCATION:
+  - ফাইল: autometainstabot.py -> save_credentials_csv() (Lines 319 - 340)
+• ফাইল: credentials.csv
+• CUSTOM USER EDIT / আপনার পরিবর্তন:
+  [এখানে আপনি কোনো পরিবর্তন করতে চাইলে লিখুন]
+
+
+[STEP-41] গুগল শিট স্বয়ংক্রিয় সিঙ্ক (Google Sheet Sync via Service Account)
+----------------------------------------------------------------------------------------------------
+• বিবরণ: service_account.json এর ক্রেডেনশিয়াল ব্যবহার করে গুগল শিটের নির্দিষ্ট স্প্রেডশিটে ব্যাকগ্রাউন্ড থ্রেডে রো অ্যাড করা হয়।
+• CODE LOCATION:
+  - ফাইল: autometainstabot.py -> save_credentials_csv() (Lines 342 - 350)
+  - ফাইল: google_sheet_manager.py -> append_row()
+• সংশ্লিষ্ট ফাইল: service_account.json
+• CUSTOM USER EDIT / আপনার পরিবর্তন:
+  [এখানে আপনি কোনো পরিবর্তন করতে চাইলে লিখুন]
+
+
+[STEP-42] টেলিগ্রাম বট ব্যালেন্স রিফ্রেশ (Fetch Updated Bot Balance)
+----------------------------------------------------------------------------------------------------
+• বিবরণ: টাস্ক শেষ হওয়ার পর টেলিগ্রাম বটে /balance পাঠিয়ে অথবা মেনু থেকে আপডেট ব্যালেন্স নিয়ে এসে GUI ড্যাশবোর্ডে শো করা হয়।
+• CODE LOCATION:
+  - ফাইল: autometainstabot.py -> TasklyWorker.fetch_bot_balance() (Lines 4180 - 4250)
+  - ফাইল: autometainstabot.py -> run_automation_loop() (Lines 4895 - 4900, 5100 - 5110)
+  - ফাইল: balance.py
+• CUSTOM USER EDIT / আপনার পরিবর্তন:
+  [এখানে আপনি কোনো পরিবর্তন করতে চাইলে লিখুন]
+
+
+[STEP-43] হিউম্যান কুলডাউন এবং পরবর্তী সাইকেল শুরু (Human Cooldown & Next Cycle)
+----------------------------------------------------------------------------------------------------
+• বিবরণ: ৬ থেকে ১২ সেকেন্ডের রেন্ডম কুলডাউন অপেক্ষা করা হয় যাতে বট ডিটেকশন না হয়। এরপর স্বয়ংক্রিয়ভাবে [STEP-04] এ ফিরে গিয়ে পরবর্তী টাস্ক সাইকেল শুরু হয়।
+• CODE LOCATION:
+  - ফাইল: autometainstabot.py -> run_automation_loop() (Lines 4905 - 4908, 5120 - 5130)
+• সংশ্লিষ্ট প্যারামিটার:
+  - random.uniform(6.0, 12.0)
+• CUSTOM USER EDIT / আপনার পরিবর্তন:
+  [এখানে আপনি কোনো পরিবর্তন করতে চাইলে লিখুন]
+
+====================================================================================================
+🎉 END OF WORKFLOW STEPS GUIDE
+====================================================================================================

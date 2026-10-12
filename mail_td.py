@@ -315,7 +315,9 @@ def generate_mail_td_account(email_prefix: str = "", password: str = "", instanc
     try:
         domains = client.get_domains()
         domain = random.choice(domains) if domains else "qabq.com"
-        prefix = email_prefix.strip() if email_prefix else client.generate_random_prefix(8)
+        rand_suffix = client.generate_random_prefix(4)
+        clean_pref = re.sub(r'[^a-z0-9]', '', str(email_prefix).lower().strip()) if email_prefix else ""
+        prefix = f"{clean_pref}{rand_suffix}" if clean_pref else client.generate_random_prefix(8)
         address = f"{prefix}@{domain}"
         
         acc = client.create_account(address=address, password=password)

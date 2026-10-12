@@ -7,6 +7,7 @@ import string
 import sys
 import time
 import requests
+import threading
 import urllib3
 
 import mail_td
@@ -151,7 +152,7 @@ def get_active_email_services() -> list[str]:
 
     # If no service enabled, fallback to default active services
     if not active:
-        active = ["mail_cx", "ninja"]
+        active = ["mail_td"]
 
     return active
 
@@ -213,6 +214,252 @@ def generate_custom_password(instance_name=""):
     log("PWD-GEN", f"Generated custom password: '{password}'", instance_name=instance_name)
     return password
 
+_POOL_LOCK = threading.Lock()
+
+def pop_ready_ninja_email(instance_name="") -> tuple[str | None, str | None]:
+    """Pops the first READY email from ninja_created_accounts.txt and marks it IN_USE"""
+    pool_file = os.path.join(BASE_DIR, "ninja_created_accounts.txt")
+    if not os.path.exists(pool_file):
+        return None, None
+    with _POOL_LOCK:
+        try:
+            with open(pool_file, "r", encoding="utf-8") as f:
+                lines = f.readlines()
+            for idx in range(len(lines) - 1, -1, -1):
+                line = lines[idx]
+                if "Status: READY" in line and "Email:" in line and "Token:" in line:
+                    parts = line.split("|")
+                    email, token = "", ""
+                    for p in parts:
+                        p_strip = p.strip()
+                        if p_strip.startswith("Email:"):
+                            email = p_strip.replace("Email:", "").strip()
+                        elif p_strip.startswith("Token:"):
+                            token = p_strip.replace("Token:", "").strip()
+                    if email and token:
+                        now_str = time.strftime("%Y-%m-%d %H:%M:%S")
+                        lines[idx] = re.sub(r'Status:\s*[^|\r\n]+', f'Status: IN_USE [{now_str}]', line)
+                        with open(pool_file, "w", encoding="utf-8") as f:
+                            f.writelines(lines)
+                        return email, token
+        except Exception as e:
+            log("POOL-WARN", f"Error reading ninja email pool: {e}", instance_name=instance_name)
+    return None, None
+
+def mark_ninja_email_status(email: str, status: str, instance_name=""):
+    """Updates status of an email in ninja_created_accounts.txt (e.g. DONE, OTP_TIMEOUT, CAPTCHA_SKIPPED)"""
+    if not email:
+        return
+    pool_file = os.path.join(BASE_DIR, "ninja_created_accounts.txt")
+    if not os.path.exists(pool_file):
+        return
+    with _POOL_LOCK:
+        try:
+            with open(pool_file, "r", encoding="utf-8") as f:
+                lines = f.readlines()
+            now_str = time.strftime("%Y-%m-%d %H:%M:%S")
+            updated = False
+            for idx, line in enumerate(lines):
+                if f"Email: {email}" in line or f"Email:{email}" in line:
+                    new_line = re.sub(r'Status:\s*[^|\r\n]+', f'Status: {status} [{now_str}]', line)
+                    lines[idx] = new_line
+                    updated = True
+                    break
+            if updated:
+                with open(pool_file, "w", encoding="utf-8") as f:
+                    f.writelines(lines)
+                log("POOL-STATUS", f"Email {email} marked as {status}", instance_name=instance_name)
+        except Exception as e:
+            log("POOL-WARN", f"Error updating email status for {email}: {e}", instance_name=instance_name)
+
+_META_CSV_LOCK = threading.Lock()
+
+def pop_ready_meta_account(instance_name="") -> tuple[str | None, str | None, str | None]:
+    """
+    Pops the first available Meta account from meta.csv (Status == 'SUCCESS' or 'READY')
+    and marks its status as 'IN_USE [timestamp]'.
+    Returns: (email, password, username) or (None, None, None)
+    """
+    meta_csv_path = os.path.join(BASE_DIR, "meta.csv")
+    if not os.path.exists(meta_csv_path):
+        return None, None, None
+
+    with _META_CSV_LOCK:
+        try:
+            with open(meta_csv_path, "r", encoding="utf-8") as f:
+                reader = list(csv.reader(f))
+            if not reader or len(reader) <= 1:
+                return None, None, None
+
+            header = reader[0]
+            status_col = -1
+            email_col = 0
+            pass_col = 1
+            user_col = 2
+
+            for c_idx, col_name in enumerate(header):
+                cl = col_name.strip().lower()
+                if "status" in cl:
+                    status_col = c_idx
+                elif "email" in cl:
+                    email_col = c_idx
+                elif "pass" in cl:
+                    pass_col = c_idx
+                elif "user" in cl:
+                    user_col = c_idx
+
+            for r_idx in range(1, len(reader)):
+                row = reader[r_idx]
+                if not row or len(row) <= max(email_col, pass_col):
+                    continue
+                row_status = row[status_col].strip().upper() if (status_col >= 0 and len(row) > status_col) else "SUCCESS"
+                if any(ok_st in row_status for ok_st in ["SUCCESS", "READY"]):
+                    email = row[email_col].strip()
+                    password = row[pass_col].strip()
+                    uname = row[user_col].strip() if len(row) > user_col else ""
+                    now_str = time.strftime("%Y-%m-%d %H:%M:%S")
+                    if status_col >= 0 and len(row) > status_col:
+                        row[status_col] = f"IN_USE [{now_str}]"
+                    else:
+                        row.append(f"IN_USE [{now_str}]")
+
+                    with open(meta_csv_path, "w", encoding="utf-8", newline="") as f:
+                        writer = csv.writer(f)
+                        writer.writerows(reader)
+
+                    log("META-CSV", f"✔ Acquired pre-created Meta account: {email} (User: {uname})", instance_name=instance_name)
+                    return email, password, uname
+        except Exception as e:
+            log("META-WARN", f"Error popping from meta.csv: {e}", instance_name=instance_name)
+    return None, None, None
+
+def mark_meta_account_status(email: str, status: str, instance_name=""):
+    """Updates status of an account in meta.csv (e.g. DONE, FAILED, TIMEOUT)"""
+    if not email:
+        return
+    meta_csv_path = os.path.join(BASE_DIR, "meta.csv")
+    if not os.path.exists(meta_csv_path):
+        return
+
+    with _META_CSV_LOCK:
+        try:
+            with open(meta_csv_path, "r", encoding="utf-8") as f:
+                reader = list(csv.reader(f))
+            if not reader or len(reader) <= 1:
+                return
+
+            header = reader[0]
+            status_col = -1
+            email_col = 0
+            for c_idx, col_name in enumerate(header):
+                cl = col_name.strip().lower()
+                if "status" in cl:
+                    status_col = c_idx
+                elif "email" in cl:
+                    email_col = c_idx
+
+            now_str = time.strftime("%Y-%m-%d %H:%M:%S")
+            updated = False
+            for r_idx in range(1, len(reader)):
+                row = reader[r_idx]
+                if len(row) > email_col and row[email_col].strip().lower() == email.strip().lower():
+                    status_val = f"{status} [{now_str}]"
+                    if status_col >= 0 and len(row) > status_col:
+                        row[status_col] = status_val
+                    else:
+                        row.append(status_val)
+                    updated = True
+                    break
+
+            if updated:
+                with open(meta_csv_path, "w", encoding="utf-8", newline="") as f:
+                    writer = csv.writer(f)
+                    writer.writerows(reader)
+                log("META-CSV", f"Marked {email} as {status} in meta.csv", instance_name=instance_name)
+        except Exception as e:
+            log("META-WARN", f"Error updating status in meta.csv: {e}", instance_name=instance_name)
+
+def replenish_ninja_pool(target_ready: int = 30, max_new_per_run: int = 30, stop_check_fn=None, instance_name=""):
+    """
+    Replenishes ninja_created_accounts.txt with fresh Ninja emails up to target_ready.
+    Called during freezing hours / idle cycles.
+    If rate limit or error occurs:
+      - If USB phone connected -> toggles Airplane mode ON/OFF
+      - If WiFi connected -> toggles WiFi ON/OFF
+    """
+    pool_file = os.path.join(BASE_DIR, "ninja_created_accounts.txt")
+    
+    def count_ready():
+        if not os.path.exists(pool_file):
+            return 0
+        try:
+            with open(pool_file, "r", encoding="utf-8") as f:
+                return sum(1 for line in f if "Status: READY" in line)
+        except Exception:
+            return 0
+
+    ready_count = count_ready()
+    log("POOL-REPL", f"🧊 [Freezing Hours Pool Fill] Ready emails: {ready_count}/{target_ready}. Target to reach {target_ready}...", instance_name=instance_name)
+
+    created_this_run = 0
+    while ready_count < target_ready and created_this_run < max_new_per_run:
+        if stop_check_fn and stop_check_fn():
+            log("POOL-REPL", "Stop signal received during email pool replenish. Halting.", instance_name=instance_name)
+            break
+
+        try:
+            client = TempMailNinjaAPI()
+            client.connect()
+            em = client.create_temp_email(auto_rotate_on_fail=False)
+            if not em:
+                raise RuntimeError("Empty email from Ninja API")
+            token = f"NINJA:{client.visitor_token}:{em}"
+            ip = getattr(client, "ip", "Unknown")
+            now_str = time.strftime("%Y-%m-%d %H:%M:%S")
+
+            with _POOL_LOCK:
+                with open(pool_file, "a", encoding="utf-8") as f:
+                    f.write(f"[{now_str}] | IP: {ip} | Email: {em} | Token: {token} | Status: READY\n")
+
+            ready_count += 1
+            created_this_run += 1
+            log("POOL-REPL", f"✔ Added [{ready_count}/{target_ready}]: {em} (IP: {ip})", instance_name=instance_name)
+            
+            try:
+                client.disconnect()
+            except Exception:
+                pass
+
+            # Safe delay between creations
+            for _ in range(10):
+                if stop_check_fn and stop_check_fn():
+                    break
+                time.sleep(1.0)
+
+        except Exception as e:
+            log("POOL-REPL-WARN", f"Error generating email: {e}", instance_name=instance_name)
+            
+            # Check rotation: USB Phone or WiFi
+            try:
+                from airplane_mode import is_usb_phone_connected, rotate_ip_on_ninja_failure
+                if is_usb_phone_connected():
+                    log("POOL-REPL", "📱 USB phone detected! Rotating IP via Airplane Mode...", instance_name=instance_name)
+                    rotate_ip_on_ninja_failure(reason=f"Pool replenish error: {e}", log_fn=lambda m: log("POOL-REPL", m, instance_name=instance_name))
+                    time.sleep(3)
+                else:
+                    from NINJA import toggle_wifi
+                    log("POOL-REPL", "🔄 Resetting WiFi to rotate IP...", instance_name=instance_name)
+                    toggle_wifi()
+                    time.sleep(4)
+            except Exception as rot_e:
+                log("POOL-REPL-ERR", f"IP rotation attempt failed: {rot_e}", instance_name=instance_name)
+                time.sleep(5)
+
+    final_ready = count_ready()
+    log("POOL-REPL", f"🧊 [Freezing Hours Pool Fill] Finished! Total Ready emails in pool: {final_ready}", instance_name=instance_name)
+    return final_ready
+
+
 def extract_otp_from_text(text: str, mail_from: str = "", subj: str = "", expected_digits: int | None = None) -> str | None:
     """Extract OTP code from email text or subject with optional digit length filtering"""
     return extract_otp_from_mail_td_text(text, subj=subj, mail_from=mail_from, expected_digits=expected_digits)
@@ -237,6 +484,11 @@ def generate_temp_email(instance_name="") -> tuple[str, str, str | None]:
 
     for service in attempt_order:
         if service == "ninja" and HAS_NINJA:
+            pool_email, pool_token = pop_ready_ninja_email(instance_name=instance_name)
+            if pool_email and pool_token:
+                log("GEN", f"Using pre-generated Ninja email from pool: {pool_email}", instance_name=instance_name)
+                return pool_email, pwd, pool_token
+
             log("GEN", "Generating email via TempMail Ninja service...", instance_name=instance_name)
             email, p, token = generate_ninja_account(
                 password=pwd,
@@ -284,9 +536,12 @@ def generate_temp_email(instance_name="") -> tuple[str, str, str | None]:
             if email and token:
                 return email, (strong_pwd or pwd), token
 
-    # If all configured services failed, try any remaining services as hard fallback
-    all_possible = ["mail_cx", "mail_td", "ninja"] if HAS_NINJA else ["mail_cx", "mail_td"]
-    remaining = [s for s in all_possible if s not in attempt_order]
+    # If all configured services failed, try any remaining services as hard fallback (excluding explicitly disabled ones)
+    cfg = load_config()
+    services_cfg = cfg.get("email_services") or cfg.get("mail_services") or {}
+    explicitly_disabled = {k for k, v in services_cfg.items() if v is False}
+    all_possible = ["mail_td", "mail_cx", "ninja"] if HAS_NINJA else ["mail_td", "mail_cx"]
+    remaining = [s for s in all_possible if s not in attempt_order and s not in explicitly_disabled]
     for service in remaining:
         try:
             if service == "mail_cx":
@@ -333,7 +588,7 @@ def fetch_otp_from_temp_mail(email: str, password: str, token: str | None = None
         return fetch_otp_mail_td(token, max_wait_sec=max_wait_sec, expected_digits=expected_digits, instance_name=instance_name)
 
     # 3. Check if registered in Ninja client pool
-    if HAS_NINJA and (email in _NINJA_CLIENTS or (token and token in _NINJA_CLIENTS)):
+    if HAS_NINJA and (email in _NINJA_CLIENTS or (token and token in _NINJA_CLIENTS) or (token and token.startswith("NINJA:"))):
         log("OTP-FETCH", f"Polling TempMail Ninja inbox for {email}{digit_info} (timeout {max_wait_sec}s)...", instance_name=instance_name)
         return fetch_otp_ninja(token or email, max_wait_sec=max_wait_sec, expected_digits=expected_digits, instance_name=instance_name)
 

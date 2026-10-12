@@ -18,51 +18,111 @@ import subprocess
 from dataclasses import dataclass, field
 from typing import Dict, List, Optional, Tuple
 
+if os.name == "nt":
+    import ctypes
+    from ctypes import wintypes
+
 
 def find_ldconsole() -> Optional[str]:
-    """Finds path to ldconsole.exe for LDPlayer."""
-    for p in [
-        r"D:\LDPlayer\LDPlayer9\ldconsole.exe",
-        r"C:\LDPlayer\LDPlayer9\ldconsole.exe",
-        r"D:\LDPlayer\LDPlayer64\ldconsole.exe",
-        r"C:\LDPlayer\LDPlayer64\ldconsole.exe",
-        r"D:\LDPlayer\LDPlayer14\ldconsole.exe",
-        r"C:\leidian\LDPlayer9\ldconsole.exe",
-        r"C:\Program Files\LDPlayer\LDPlayer9\ldconsole.exe",
-    ]:
-        if os.path.exists(p):
-            return p
+    """Finds path to ldconsole.exe for LDPlayer across all drives."""
+    drives = ["C:", "D:", "E:", "F:"]
+    subpaths = [
+        r"LDPlayer\LDPlayer9\ldconsole.exe",
+        r"LDPlayer\LDPlayer64\ldconsole.exe",
+        r"LDPlayer\LDPlayer14\ldconsole.exe",
+        r"LDPlayer\LDPlayer4.0\ldconsole.exe",
+        r"LDPlayer\LDPlayer\ldconsole.exe",
+        r"leidian\LDPlayer9\ldconsole.exe",
+        r"leidian\LDPlayer\ldconsole.exe",
+        r"Program Files\LDPlayer\LDPlayer9\ldconsole.exe",
+        r"Program Files\LDPlayer\LDPlayer\ldconsole.exe",
+    ]
+    for d in drives:
+        for sp in subpaths:
+            p = os.path.join(d + os.sep, sp)
+            if os.path.exists(p):
+                return p
     return shutil.which("ldconsole") or shutil.which("dnconsole")
 
 
 def find_mumu_manager() -> Optional[str]:
-    """Finds path to MuMuManager.exe for MuMu Player."""
-    for p in [
-        r"C:\Program Files\Netease\MuMuPlayer\nx_main\MuMuManager.exe",
-        r"C:\Program Files\Netease\MuMuPlayer-12.0\shell\MuMuManager.exe",
-        r"C:\Program Files\Netease\MuMuPlayerGlobal-12.0\shell\MuMuManager.exe",
-        r"C:\Program Files\MuMuPlayer-12.0\shell\MuMuManager.exe",
-        r"D:\Program Files\Netease\MuMuPlayer\nx_main\MuMuManager.exe",
-    ]:
-        if os.path.exists(p):
-            return p
+    """Finds path to MuMuManager.exe for MuMu Player across all drives."""
+    drives = ["C:", "D:", "E:", "F:"]
+    subpaths = [
+        r"Program Files\Netease\MuMuPlayer\nx_main\MuMuManager.exe",
+        r"Program Files\Netease\MuMuPlayer-12.0\shell\MuMuManager.exe",
+        r"Program Files\Netease\MuMuPlayerGlobal-12.0\shell\MuMuManager.exe",
+        r"Program Files\MuMuPlayer-12.0\shell\MuMuManager.exe",
+        r"Program Files (x86)\Netease\MuMuPlayer\nx_main\MuMuManager.exe",
+        r"MuMuPlayer\nx_main\MuMuManager.exe",
+        r"Netease\MuMuPlayer\nx_main\MuMuManager.exe",
+    ]
+    for d in drives:
+        for sp in subpaths:
+            p = os.path.join(d + os.sep, sp)
+            if os.path.exists(p):
+                return p
     return shutil.which("MuMuManager")
 
 
 def find_adb() -> str:
-    """Finds available ADB executable."""
-    possible_paths = [
-        r"D:\LDPlayer\LDPlayer9\adb.exe",
-        r"C:\LDPlayer\LDPlayer9\adb.exe",
-        r"C:\Program Files\Netease\MuMuPlayer\nx_device\15.0\shell\adb.exe",
-        r"C:\Program Files\Netease\MuMuPlayer\nx_main\adb.exe",
-        r"C:\Program Files\Netease\MuMuPlayer-12.0\shell\adb.exe",
-        r"D:\LDPlayer\LDPlayer14\adb.exe",
-        os.path.expanduser(r"~\AppData\Local\Android\Sdk\platform-tools\adb.exe"),
+    """Finds available ADB executable with deep multi-drive and emulator folder search."""
+    # 1. First check relative to discovered MuMuManager if present
+    mumu_p = find_mumu_manager()
+    if mumu_p and os.path.exists(mumu_p):
+        mumu_dir = os.path.dirname(mumu_p)  # e.g. D:\Program Files\Netease\MuMuPlayer\nx_main
+        parent_dir = os.path.dirname(mumu_dir)  # e.g. D:\Program Files\Netease\MuMuPlayer
+        mumu_adbs = [
+            os.path.join(mumu_dir, "adb.exe"),
+            os.path.join(parent_dir, "nx_device", "12.0", "shell", "adb.exe"),
+            os.path.join(parent_dir, "nx_device", "15.0", "shell", "adb.exe"),
+            os.path.join(parent_dir, "shell", "adb.exe"),
+        ]
+        for candidate in mumu_adbs:
+            if os.path.exists(candidate):
+                return candidate
+
+    # 2. Check relative to discovered LDConsole if present
+    ld_p = find_ldconsole()
+    if ld_p and os.path.exists(ld_p):
+        ld_dir = os.path.dirname(ld_p)
+        ld_adb = os.path.join(ld_dir, "adb.exe")
+        if os.path.exists(ld_adb):
+            return ld_adb
+
+    # 3. Check common known paths across all drives
+    drives = ["C:", "D:", "E:", "F:"]
+    subpaths = [
+        r"Program Files\Netease\MuMuPlayer\nx_main\adb.exe",
+        r"Program Files\Netease\MuMuPlayer\nx_device\12.0\shell\adb.exe",
+        r"Program Files\Netease\MuMuPlayer\nx_device\15.0\shell\adb.exe",
+        r"Program Files\Netease\MuMuPlayer-12.0\shell\adb.exe",
+        r"Program Files\Netease\MuMuPlayerGlobal-12.0\shell\adb.exe",
+        r"Program Files\MuMuPlayer-12.0\shell\adb.exe",
+        r"LDPlayer\LDPlayer9\adb.exe",
+        r"LDPlayer\LDPlayer14\adb.exe",
+        r"LDPlayer\LDPlayer64\adb.exe",
+        r"LDPlayer\LDPlayer4.0\adb.exe",
+        r"leidian\LDPlayer9\adb.exe",
+        r"Program Files\LDPlayer\LDPlayer9\adb.exe",
     ]
-    for path in possible_paths:
-        if os.path.exists(path):
-            return path
+    for d in drives:
+        for sp in subpaths:
+            p = os.path.join(d + os.sep, sp)
+            if os.path.exists(p):
+                return p
+
+    # 4. Check user home directories
+    home = os.path.expanduser("~")
+    user_paths = [
+        os.path.join(home, "Desktop", "scrcpy-win64-v4.0", "adb.exe"),
+        os.path.join(home, "Desktop", "scrcpy-win64", "adb.exe"),
+        os.path.join(home, "AppData", "Local", "Android", "Sdk", "platform-tools", "adb.exe"),
+    ]
+    for p in user_paths:
+        if os.path.exists(p):
+            return p
+
     which_adb = shutil.which("adb")
     return which_adb if which_adb else "adb"
 
@@ -486,9 +546,20 @@ def connect_device_adb(device_serial: str) -> bool:
 
 def find_scrcpy() -> Optional[str]:
     """Finds path to scrcpy.exe for interactive screen mirroring."""
-    desktop_scrcpy = os.path.expanduser(r"~\Desktop\scrcpy-win64-v4.0\scrcpy.exe")
-    if os.path.exists(desktop_scrcpy):
-        return desktop_scrcpy
+    home = os.path.expanduser("~")
+    candidates = [
+        os.path.join(home, "Desktop", "scrcpy-win64-v4.0", "scrcpy.exe"),
+        os.path.join(home, "Desktop", "scrcpy-win64", "scrcpy.exe"),
+        os.path.join(home, "Desktop", "scrcpy", "scrcpy.exe"),
+        os.path.join(home, "Downloads", "scrcpy-win64-v4.0", "scrcpy.exe"),
+        os.path.join(home, "Downloads", "scrcpy-win64", "scrcpy.exe"),
+        os.path.join(home, "Downloads", "scrcpy", "scrcpy.exe"),
+        r"C:\scrcpy\scrcpy.exe",
+        r"D:\scrcpy\scrcpy.exe",
+    ]
+    for p in candidates:
+        if os.path.exists(p):
+            return p
     return shutil.which("scrcpy")
 
 
@@ -549,18 +620,258 @@ def capture_device_screen(device_serial: str, target_size=(160, 280)):
     return None
 
 
-def show_emulator_window(emu_type: str, index: int) -> Tuple[bool, str]:
-    """Brings the emulator window to the foreground."""
-    emu_type = emu_type.lower()
+def bring_hwnd_to_front(hwnd: int) -> bool:
+    """Restores and brings a Win32 HWND to the absolute foreground."""
+    if not hwnd or os.name != "nt":
+        return False
+    try:
+        user32 = ctypes.windll.user32
+        kernel32 = ctypes.windll.kernel32
+        if not user32.IsWindow(hwnd):
+            return False
+
+        SW_RESTORE = 9
+        SW_SHOW = 5
+        if user32.IsIconic(hwnd):
+            user32.ShowWindow(hwnd, SW_RESTORE)
+        else:
+            user32.ShowWindow(hwnd, SW_SHOW)
+
+        try:
+            user32.AllowSetForegroundWindow(0xFFFFFFFF)
+        except Exception:
+            pass
+
+        try:
+            user32.SwitchToThisWindow(hwnd, True)
+        except Exception:
+            pass
+
+        fg_hwnd = user32.GetForegroundWindow()
+        cur_tid = kernel32.GetCurrentThreadId()
+        target_tid = user32.GetWindowThreadProcessId(hwnd, None)
+        fg_tid = user32.GetWindowThreadProcessId(fg_hwnd, None) if fg_hwnd else 0
+
+        if cur_tid and target_tid and cur_tid != target_tid:
+            user32.AttachThreadInput(cur_tid, target_tid, True)
+        if fg_tid and target_tid and fg_tid != target_tid:
+            user32.AttachThreadInput(fg_tid, target_tid, True)
+
+        user32.keybd_event(0x12, 0, 0, 0)
+        user32.keybd_event(0x12, 0, 2, 0)
+
+        user32.BringWindowToTop(hwnd)
+        user32.SetForegroundWindow(hwnd)
+        user32.SetActiveWindow(hwnd)
+
+        if cur_tid and target_tid and cur_tid != target_tid:
+            user32.AttachThreadInput(cur_tid, target_tid, False)
+        if fg_tid and target_tid and fg_tid != target_tid:
+            user32.AttachThreadInput(fg_tid, target_tid, False)
+
+        return True
+    except Exception:
+        return False
+
+
+def find_window_for_instance(
+    emu_type: str,
+    index: int,
+    name: str = "",
+    pid: int = -1,
+    extra_info: Optional[Dict] = None
+) -> Optional[int]:
+    """Finds the HWND for an emulator instance using multiple discovery methods."""
+    if os.name != "nt":
+        return None
+    emu_type = (emu_type or "").lower()
+    user32 = ctypes.windll.user32
+
+    # 1. Check extra_info if window handle was already provided by manager
+    if extra_info and isinstance(extra_info, dict):
+        main_wnd = extra_info.get("main_wnd")
+        if main_wnd:
+            try:
+                h = int(str(main_wnd), 16) if isinstance(main_wnd, str) else int(main_wnd)
+                if h and user32.IsWindow(h):
+                    return h
+            except Exception:
+                pass
+
+        render_wnd = extra_info.get("render_wnd")
+        if render_wnd:
+            try:
+                h = int(str(render_wnd), 16) if isinstance(render_wnd, str) else int(render_wnd)
+                if h and user32.IsWindow(h):
+                    return h
+            except Exception:
+                pass
+
+        raw = extra_info.get("raw")
+        if raw and isinstance(raw, str):
+            parts = raw.split(",")
+            if len(parts) >= 3:
+                try:
+                    h = int(parts[2])
+                    if h and user32.IsWindow(h):
+                        return h
+                except Exception:
+                    pass
+
+    # 2. Build candidate window titles
+    candidate_titles = []
+    if name:
+        clean_name = name.strip()
+        candidate_titles.append(clean_name)
+        if index > 0 and not clean_name.endswith(f"-{index}"):
+            candidate_titles.append(f"{clean_name}-{index}")
+
+    if emu_type == "mumu":
+        if index == 0:
+            candidate_titles.extend(["Android Device", "MuMuPlayer", "Android Device-0", "MuMu Device-0"])
+        else:
+            candidate_titles.extend([
+                f"Android Device-{index}",
+                f"Android Device {index}",
+                f"MuMuPlayer-{index}",
+                f"MuMu Device-{index}"
+            ])
+    elif emu_type == "ld":
+        if index == 0:
+            candidate_titles.extend(["LDPlayer", "LDPlayer-0", "dnplayer"])
+        else:
+            candidate_titles.extend([f"LDPlayer-{index}", f"LDPlayer {index}"])
+
+    # 3. Direct FindWindowW by title
+    for title in candidate_titles:
+        try:
+            h = user32.FindWindowW(None, title)
+            if h and user32.IsWindow(h):
+                return h
+        except Exception:
+            pass
+
+    # 4. If PID not given, fetch from MuMuManager or running dnplayer
+    if pid <= 0:
+        if emu_type == "mumu" and MUMU_BIN:
+            try:
+                c, out, _ = run_cmd(f'"{MUMU_BIN}" info -v {index}', timeout=3.0)
+                if c == 0 and out:
+                    data = json.loads(out)
+                    pid = data.get("pid", -1)
+                    mw = data.get("main_wnd")
+                    if mw:
+                        h = int(str(mw), 16)
+                        if h and user32.IsWindow(h):
+                            return h
+            except Exception:
+                pass
+        elif emu_type == "ld":
+            running_dn = get_running_dnplayer_processes()
+            pid = running_dn.get(index, -1)
+
+    # 5. EnumWindows by PID or candidate title match
+    matched = []
+    WNDENUMPROC = ctypes.WINFUNCTYPE(wintypes.BOOL, wintypes.HWND, wintypes.LPARAM)
+
+    def _enum_cb(hwnd, lparam):
+        if not user32.IsWindow(hwnd):
+            return True
+        w_pid = wintypes.DWORD()
+        user32.GetWindowThreadProcessId(hwnd, ctypes.byref(w_pid))
+
+        buf = ctypes.create_unicode_buffer(512)
+        user32.GetWindowTextW(hwnd, buf, 512)
+        w_title = buf.value.strip()
+
+        if pid > 0 and w_pid.value == pid:
+            if w_title and user32.IsWindowVisible(hwnd):
+                matched.append((hwnd, 100))
+            elif user32.IsWindowVisible(hwnd):
+                matched.append((hwnd, 80))
+            elif w_title:
+                matched.append((hwnd, 70))
+            else:
+                matched.append((hwnd, 50))
+            return True
+
+        if w_title:
+            w_lower = w_title.lower()
+            for cand in candidate_titles:
+                if cand.lower() == w_lower:
+                    matched.append((hwnd, 95))
+                    return True
+                elif cand.lower() in w_lower:
+                    matched.append((hwnd, 75))
+                    return True
+        return True
+
+    try:
+        user32.EnumWindows(WNDENUMPROC(_enum_cb), 0)
+    except Exception:
+        pass
+
+    if matched:
+        matched.sort(key=lambda x: x[1], reverse=True)
+        return matched[0][0]
+
+    return None
+
+
+def show_emulator_window(
+    emu_type: str,
+    index: int,
+    name: str = "",
+    pid: int = -1,
+    extra_info: Optional[Dict] = None
+) -> Tuple[bool, str]:
+    """
+    Brings the emulator window to the foreground.
+    1. Direct Win32 HWND activation (SetForegroundWindow, SwitchToThisWindow, SW_RESTORE).
+    2. PowerShell WScript.Shell AppActivate by title or PID.
+    3. Emulator CLI commands (MuMuManager / ldconsole).
+    """
+    emu_type = (emu_type or "").lower()
+
+    # 1. Direct Win32 window activation
+    hwnd = find_window_for_instance(emu_type, index, name=name, pid=pid, extra_info=extra_info)
+    if hwnd:
+        if bring_hwnd_to_front(hwnd):
+            return True, f"{emu_type.upper()} [idx {index}] window activated (HWND {hex(hwnd)})"
+
+    # 2. PowerShell AppActivate fallback
+    candidate_titles = []
+    if name:
+        candidate_titles.append(name.strip())
+    if emu_type == "mumu":
+        candidate_titles.extend(["Android Device" if index == 0 else f"Android Device-{index}", f"MuMuPlayer-{index}"])
+    elif emu_type == "ld":
+        candidate_titles.extend(["LDPlayer" if index == 0 else f"LDPlayer-{index}"])
+
+    for title in candidate_titles:
+        ps_cmd = f"(New-Object -ComObject WScript.Shell).AppActivate('{title}')"
+        c, out, _ = run_cmd(f'powershell -NoProfile -Command "{ps_cmd}"', timeout=2.5)
+        if c == 0 and "True" in out:
+            return True, f"{emu_type.upper()} [idx {index}] window brought to front via AppActivate ('{title}')"
+
+    if pid > 0:
+        ps_cmd = f"(New-Object -ComObject WScript.Shell).AppActivate({pid})"
+        c, out, _ = run_cmd(f'powershell -NoProfile -Command "{ps_cmd}"', timeout=2.5)
+        if c == 0 and "True" in out:
+            return True, f"{emu_type.upper()} [idx {index}] window brought to front via AppActivate (PID {pid})"
+
+    # 3. Emulator CLI fallback
     if emu_type == "mumu":
         if MUMU_BIN:
-            c, out, _ = run_cmd(f'"{MUMU_BIN}" control -v {index} show_window', timeout=4.0)
-            return (c == 0), "Window shown"
+            run_cmd(f'"{MUMU_BIN}" control -v {index} launch', timeout=3.0)
+            run_cmd(f'"{MUMU_BIN}" main launch', timeout=3.0)
+            return True, f"MuMu window launch command sent for index {index}"
     elif emu_type == "ld":
         if LDCONSOLE_BIN:
-            c, out, _ = run_cmd(f'"{LDCONSOLE_BIN}" launch --index {index}', timeout=4.0)
-            return (c == 0), "LDPlayer window brought to front"
-    return False, "Not supported"
+            c, _, _ = run_cmd(f'"{LDCONSOLE_BIN}" launch --index {index}', timeout=3.0)
+            return True, f"LDPlayer window launch command sent for index {index}"
+
+    return False, f"Unable to bring window to front for {emu_type} index {index}"
 
 
 def organize_all_windows() -> Tuple[bool, str]:
