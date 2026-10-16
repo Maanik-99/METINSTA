@@ -59,6 +59,10 @@ def format_proxy_url(proxy_str: str | None = None, session_id: str | None = None
     if not raw:
         return None
 
+    # Resolve proxy.h143.xyz directly to active server IP to avoid ISP DNS resolution failure
+    if "proxy.h143.xyz" in raw:
+        raw = raw.replace("proxy.h143.xyz", "31.59.160.7")
+
     scheme = "http"
     if "://" in raw:
         scheme, raw = raw.split("://", 1)
